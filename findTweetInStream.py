@@ -7,27 +7,13 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import time
 
-at = '157335588-G8zEwfkKJat0QzPuV77iww1PVU5BtXBlbGITIeZP'
-ats = 'V5bVrrGqgmdZ3xFsKFig9VWKU9Lvfepm0Ii9JTKfzG3DG'
-ckey = 'R74IN04Adp1NKtTA1Cc6J4NeJ'
-cs = 'u6qk0emnADqY9c3Yzr7Z5GCqnUpfpTxhX5IIEp3EjdhtRUGKGu'
-
-twitter_stream = TwitterStream(auth=OAuth(at, ats, ckey, cs), domain='stream.twitter.com')
-iterator = twitter_stream.statuses.sample()
-count = 0
-curr_count=0
-
-print('NEW')
-word = raw_input('Input word you need to find: ')
-word = word.decode('utf-8')
-print(word)
-
-def send_message(count):
-    recipient = 'jrtidev@gmail.com'
-    sender_lgn = 'jrtidev@gmail.com'
-    sender_pwd = 'Goo979198033'
-    subj = 'Tweet count update'
-    email_body = 'Hello, Artem!\nThis crazy world made another 100,000 tweets since '+str(localtime)+'! \n'+ str(count)+ ' in total!'  
+#function responsible for sending message with found tweet
+def send_message(entity, word):
+    recipient = 'RECIPIENT_EMAIL'
+    sender_lgn = 'SENDER_EMAIL'
+    sender_pwd = 'SENDER_PASSWORD'
+    subj = 'Update on #%s' % (word)
+    email_body = 'Hello, Artem!\nThis is what happened:\n'+entity  
 
     msg = MIMEMultipart('alternative')
     smtpsrvr = smtplib.SMTP('smtp.gmail.com', 587)
@@ -53,45 +39,49 @@ def store_tweet(word, entity):
 		except UnicodeEncodeError:
 			tw_str.write('Encoding Error \n')
 
+#twitter application credentials
+at = 'ACCESS_TOKKEN'
+ats = 'ACCESS_TOKKEN_SECRET'
+ckey = 'CONSUMER_KEY'
+cs = 'CONSUMER_SECRET'
+
+twitter_stream = TwitterStream(auth=OAuth(at, ats, ckey, cs), domain='stream.twitter.com')
+iterator = twitter_stream.statuses.sample()
+count = 0
+curr_count=0
+
+word = raw_input('Input word you need to find: ')
+word = word.decode('utf-8')
+print(word)
+
 for i in iterator:
 	try:
 		text = i['text']
-		print(text)
+		text=text.lower()
 	except KeyError:
-		# print('there is no such data')
 		text = 'None'
 	try:
 		user_id = i['user']['id']
 	except KeyError:
-		# print('there is no such data')
 		user_id = 'None'
 	try:	
 		name = i['user']['screen_name']
 	except KeyError:
-		# print('there is no such data')
 		name = 'None'
 	try:	
 		location = i['user']['location']
 	except KeyError:
-		# print('there is no such data')
 		location = 'None'
 	try:	
 		followers = i['user']['followers_count']
 	except KeyError:
-		# print('there is no such data')
 		followers = 'None'
+	
 	#find word in twitter stream
-	# curr_count = count
 	if word in text:
 		entity = 'Usrer ID: %s, \n User Name: %s, \n Location: %s, \n Followers: %s, \n Message: %s, \n' % (user_id, name, location, followers, text)
+		entity = entity.encode('utf-8')
 		count+=1
 		print(count)
 		store_tweet(word, entity)
-	# print (count, text)
-	#count all tweets
-	# localtime = time.asctime( time.localtime(time.time()) )
-	# count+=1
-	# curr_count+=1
-	# if curr_count >=100000:
-	# 	send_message(count)
-	# 	curr_count=0
+		send_message(entity, word)
